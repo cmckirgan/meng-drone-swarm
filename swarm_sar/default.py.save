@@ -1,0 +1,38 @@
+#! /usr/bin/env morseexec
+
+""" Basic MORSE simulation scene for <swarm_sar> environment
+
+Feel free to edit this template as you like!
+"""
+
+from morse.builder import *
+
+# Add the MORSE mascott, MORSY.
+# Out-the-box available robots are listed here:
+# http://www.openrobots.org/morse/doc/stable/components_library.html
+#
+# 'morse add robot <name> swarm_sar' can help you to build custom robots.
+
+nPath = 2
+
+nDrones = 6
+Drones = []
+for i in range(1, (nPath+nDrones)+1):
+	Robot = Quadrotor
+()
+	#Robot._name = "bot"+str(i)
+	QRDC = RotorcraftWaypoint()
+	pose = Pose()
+	QRDC.translate(0, 0, 0)
+	QRDC.add_interface('ros')
+	pose.add_interface('ros')
+	Robot.append(QRDC)
+	Robot.append(pose)
+	Drones.append(Robot)
+
+
+# set 'fastmode' to True to switch to wireframe mode
+env = Environment('mountain/mount.blend1', fastmode = False)
+env.set_camera_location([-18.0, -6.7, 10.8])
+env.set_camera_rotation([1.09, 0, -1.14])
+

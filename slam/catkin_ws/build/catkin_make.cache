@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/che/Documents/Swarm/slam/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/che/Documents/Swarm/slam/catkin_ws/install -G Unix Makefiles
