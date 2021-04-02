@@ -1,6 +1,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
 from sensor_msgs.msg import LaserScan, Image
+import transforms as tf
 import math
 import cv2
 
@@ -10,6 +11,7 @@ class robot:
 
 	def __init__(self, Rank):
 		#TODO: slow the speed of the drone, helps with camera issues
+		#Kinda done makes them overshoot like mad
 		print("Creating Done")
 		self.pose = rospy.Subscriber("/bot"+str(Rank)+"/pose", PoseStamped, self.pose_ctrl)
 		self.global_pose = rospy.Subscriber("global_pose", PoseArray, self.global_pose_ctrl)
@@ -32,22 +34,39 @@ class robot:
 	def set_waypoints(self, waypoint):
 		#TODO: rotate the robot to face the direction of the way point, fixes some camera issues
 		self.waypoint.append(waypoint)
-		#print(self.waypoint)
+		print(self.waypoint)
 
 	def pose_ctrl(self, message):
 		self.position = message
 		try:
-			if (abs(message.pose.position.x - self.waypoint[0].position.x)<= 0.5) and (abs(message.pose.position.y-self.waypoint[0].position.y) <= 0.5):
-				print("Postion Reached "+str(self.rank))
-				self.waypoint.pop(0)
-				#print(self.waypoint[0])
+			if self.waypoint:
+				if (abs(message.pose.position.x - self.waypoint[0].position.x)<= 0.5) and (abs(message.pose.position.y-self.waypoint[0].position.y) <= 0.5):
+					print("Postion Reached "+str(self.rank))
+					self.waypoint.pop(0)
+					#print(self.waypoint[0])
+				else:
+					if len(self.waypoint)>0:
+						if self.hold:
+							pass
+#							This publishes posestammped not pose
+#							self.QRDC.publish(self.position)
+						else:
+							#TODO produce quaternion for rotation to that point
+#							print("Reached")
+							tmp_waypoint = self.waypoint[0]
+							rotation_qua = tf.euler_to_quaternion(0,0,math.atan2(self.position.pose.position.x-tmp_waypoint.position.x, self.position.pose.position.y-tmp_waypoint.position.y))
+							tmp_waypoint.orientation.x = rotation_qua[0]
+							tmp_waypoint.orientation.y = rotation_qua[1]
+							tmp_waypoint.orientation.z = rotation_qua[2]
+							tmp_waypoint.orientation.w = rotation_qua[3]
+#							print("Rotation: "+str(rotation_qua))
+							self.QRDC.publish(tmp_waypoint)
 			else:
-				if len(self.waypoint)>0:
-					if self.hold:
-						self.QRDC.publish(self.position)
-					else:
-						self.QRDC.publish(self.waypoint[0])
-		except:
+#				print("No more Waypoints")
+				self.hold = True
+
+		except Exception as e:
+			print(e)
 			self.hold = True
 
 	def check_collisions(self, message):
@@ -64,12 +83,12 @@ class robot:
 			#Implentation of Sutherland-Hodgman Algo
 				#Create other vert
 				#Check for polygon clipping, if clipping hold lower ranked drone
-			if i < self.rank and self.calc_dist(self.position.pose, message.poses[i-1]) <=5:
+			if i < self.rank and self.calc_dist(self.position.pose, message.poses[i-1]) <=10:
 				self.hold = True
 				break
 			else:
 				self.hold = False
-		print("Robot "+str(self.rank)+" holding!")
+#		print("Robot "+str(self.rank)+" holding!")
 
 	def calc_dist(self, ego, target):
 		return math.sqrt(((ego.position.x - target.position.x)**2) + ((ego.position.y - target.position.y)**2) + ((ego.position.z - target.position.z)**2))
@@ -117,7 +136,7 @@ class drone_control():
 		count = 0
 		for i in range(0, len(self.drones)):
 			#Publish start and end to each drone or until all inital waypoints are published
-			print(count)
+#			print(count)
 			if count < len(self.waypoints[0]):
 				self.drones[i].set_waypoints(self.waypoints[0][count])
 #				print(self.waypoints[0][count])
@@ -146,7 +165,7 @@ class drone_control():
 						dest = self.drones[i].waypoint[0]
 						count += 1
 					elif len(self.POI)>0:
-						print("Default Path Completed")
+#						print("Default Path Completed")
 						dest = pose
 					else:
 						dest = pose
@@ -181,6 +200,7 @@ class drone_control():
 			end_pose.position.x = -start_x
 			end_pose.position.y = -start_y
 			end_pose.position.z = Alt
+			print(end_pose.orientation)
 			self.waypoints[0].append(start_pose)
 			self.waypoints[1].append(end_pose)
 		#print(self.waypoints)
