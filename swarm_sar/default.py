@@ -32,6 +32,7 @@ for i in range(1, (nPath+nDrones)+1):
 	cam.rotate(0,-1.5708,0)
 	QRDC.add_interface('ros')
 	QRDC.add_interface('socket')
+	QRDC.properties(MaxBankAngle=0.17)
 	pose.add_interface('ros')
 	cam.add_interface('ros')
 	IR.add_interface('ros')
