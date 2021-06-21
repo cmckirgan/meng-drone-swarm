@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 import sensing
 import logging
-import laser_geometry.laser_geometry as lg
 #Search modules defines the robots and their control logic
 
 class robot:
@@ -126,32 +125,25 @@ class robot:
 							newBody = True
 						else:
 							pass
+							#self.PosLoc[i][0] = (self.PosLoc[i][0]+detection[0][0])/2.0
+							#self.PosLoc[i][1] = (self.PosLoc[i][1]+detection[0][1])/2.0
 					if newBody:
 						self.PosLoc.append(list(detection[0]))
 						print('New Body found by bot:%d at X:%d Y:%d' % (self.rank, detection[0][0], detection[0][1]))
 			else:
 				pass
 #				print('No body')
-		#Run blob detction
-		#Publish image and pose to controller
-		#Maybe classifer if computaion allows
-
-class pathfinder(robot):
+ass pathfinder(robot):
 #Extends robot class, used for definition of the master pathfinder drones
 	lidar = None
 	lidar_data = [[],[]]
 	def __init__(self,Rank):
 		super().__init__(Rank)
 		self.lidar = rospy.Subscriber("/bot"+str(Rank)+"/lidar", LaserScan, self.lidar_handler)
-		self.slam_node = rospy.Publisher("/velodyne_points", sensor_msg, queue_size=10)
-		self.lp = lg.LaserProjection()
 
 	def lidar_handler(self, message):
-		#If mapping has begun convert and publish lidar scan to slam node
-		if not self.search:
-			ls2pc = self.lp.projectLaser(message)
-			self.slam_node.publish(ls2pc)
-			#Once mapping is complete point cloud map can be viewed in RVIS or saved as a pcm file.
+		self.lidar_data = message
+
 
 class drone(robot):
 #Extends robot class, used for definition of the slave drones
@@ -170,7 +162,6 @@ class drone_control():
 		self.calculate_init_waypoints(Radius, Theta, Alt)
 		self.mapping = False
 		#Might change this to publish as a 2D array
-		#In real world applications these would be published by each drone
 		self.global_pose_pub = rospy.Publisher('global_pose', PoseArray, queue_size=10)
 		self.global_dest_pub = rospy.Publisher('global_dest', PoseArray, queue_size=10)
 		#rospy.init_node("control")
@@ -181,9 +172,13 @@ class drone_control():
 		count = 0
 		for i in range(0, len(self.drones)):
 			#Publish start and end to each drone or until all inital waypoints are published
+#			print(count)
 			if count < len(self.waypoints[0]):
 				self.drones[i].set_waypoints(self.waypoints[0][count])
+#				print(self.waypoints[0][count])
 				self.drones[i].set_waypoints(self.waypoints[1][count])
+				#print("Drone "+str(i)+" Current Dest:")
+				#print(self.drones[i].waypoint[0])
 				count += 1
 			else:
 				break

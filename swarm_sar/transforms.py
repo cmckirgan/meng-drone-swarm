@@ -34,3 +34,35 @@ def qua_between_points(q0, q1):
 	q1 = np.array(q1)
 	return q0*q1
 
+def polar_to_cart(r,t):
+	x = r*math.cos(t)
+	y = r*math.sin(t)
+	return x, y
+
+
+def cart_to_polar(x, y):
+	r = math.sqrt((y**2)+(x**2))
+	t = math.atan2(y,x)
+	#Returns polar coordinates
+#	print(t)
+	if (x>= 0 and y >=0):
+		return r,t
+	elif(x<0 and y>=0):
+#		t = math.pi-t
+		return r, t
+	elif(x<0 and y<0):
+#		t = t +math.pi
+		return r, t
+	elif (x>=0 and y<0):
+#		print('Quad 4 %f' % t)
+#		t = (math.pi*2)-t
+		return r, t
+
+
+def rotate_polar(r, t, rotation):
+	if t < 0:
+		t = (math.pi*2)+t
+	t = t+rotation
+	if t > (math.pi*2):
+		t = t -(math.pi*2)
+	return r, t
