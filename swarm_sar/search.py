@@ -1,6 +1,6 @@
 import rospy
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
-from sensor_msgs.msg import LaserScan, Image
+from sensor_msgs.msg import LaserScan, Image, PointCloud2
 import transforms as tf
 import math
 import numpy as np
@@ -143,7 +143,7 @@ class pathfinder(robot):
 	def __init__(self,Rank):
 		super().__init__(Rank)
 		self.lidar = rospy.Subscriber("/bot"+str(Rank)+"/lidar", LaserScan, self.lidar_handler)
-		self.slam_node = rospy.Publisher("/velodyne_points", sensor_msg, queue_size=10)
+		self.slam_node = rospy.Publisher("/velodyne_points", PointCloud2, queue_size=10)
 		self.lp = lg.LaserProjection()
 
 	def lidar_handler(self, message):
